@@ -14,8 +14,6 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
-// RESPONSE CODE
-
 const generateRandomString = function() {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -27,6 +25,7 @@ const generateRandomString = function() {
 };
 
 
+// RESPONSE CODE
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -53,38 +52,47 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello<b>World</b></body></html>\n");
 });
 
+// INDEX PAGE
+
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
+
+// SHOW URLS
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
   res.render("urls_show", templateVars);
 });
 
+// GET SHORTENED URL
+
 app.post("/urls", (req, res) => {
   let shortenedURL = generateRandomString();
-
   res.redirect(`/urls/${shortenedURL}`);
-
   urlDatabase[shortenedURL] = req.body.longURL;
 });
 
+// REDIRECT TO LONG URL PAGE
+
 app.get("/u/:shortURL", (req, res) => {
   let longURL = urlDatabase[req.params.shortURL];
-  
   res.redirect(longURL);
 
-  console.log(longURL);
 });
+
+// DELETE A SHORT URL
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 })
 
+// EDIT A SHORT URL
+
 app.post("/urls/:shortURL", (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect("/urls");
 })
+
