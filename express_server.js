@@ -52,17 +52,23 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello<b>World</b></body></html>\n");
 });
 
+// ON SIGN-IN
+app.post("/login", (req, res) => {
+  res.cookie("username",req.body.username);
+  res.redirect("/urls")
+})
+
 // INDEX PAGE
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase };
+  let templateVars = { urls: urlDatabase, username: req.cookies.username};
   res.render("urls_index", templateVars);
 });
 
 // SHOW URLS
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]};
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies.username};
   res.render("urls_show", templateVars);
 });
 
