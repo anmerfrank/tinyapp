@@ -9,15 +9,15 @@ app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
 
 
-function generateRandomString() {
+const generateRandomString = function() {
   let result = '';
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
-  for ( var i = 0; i < 6; i++ ) {
+  for (let i = 0; i < 6; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
+  }
   return result;
-}
+};
 
 
 
@@ -43,7 +43,7 @@ app.get("/urls.json", (req, res) => {
 });
 
 app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello<b>World</b></body></html>\n")
+  res.send("<html><body>Hello<b>World</b></body></html>\n");
 });
 
 app.get("/urls", (req, res) => {
@@ -57,6 +57,18 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("OK");
-})
+  let shortenedURL = generateRandomString();
+
+  res.redirect(`/urls/${shortenedURL}`);
+
+  urlDatabase[shortenedURL] = req.body.longURL;
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  // const longURL = req.body.longURL;
+  const longURL = urlDatabase[req.params.shortURL];
+  
+  res.redirect(longURL);
+
+  console.log(longURL);
+});
