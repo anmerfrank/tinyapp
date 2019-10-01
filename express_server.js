@@ -1,6 +1,11 @@
+// CONFIG CODE
+
 const express = require("express");
 const app = express();
 const PORT = 8080;
+
+var cookieParser = require('cookie-parser')
+app.use(cookieParser()) 
 
 
 const bodyParser = require("body-parser");
@@ -8,6 +13,8 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
+
+// RESPONSE CODE
 
 const generateRandomString = function() {
   let result = '';
@@ -65,8 +72,7 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  // const longURL = req.body.longURL;
-  const longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL];
   
   res.redirect(longURL);
 
@@ -75,5 +81,10 @@ app.get("/u/:shortURL", (req, res) => {
 
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
+  res.redirect("/urls");
+})
+
+app.post("/urls/:shortURL", (req, res) => {
+  urlDatabase[req.params.shortURL] = req.body.longURL;
   res.redirect("/urls");
 })
