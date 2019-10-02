@@ -52,10 +52,17 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello<b>World</b></body></html>\n");
 });
 
-// ON SIGN-IN
+// SIGN-IN
 app.post("/login", (req, res) => {
   res.cookie("username",req.body.username);
-  res.redirect("/urls")
+  res.redirect("/urls");
+})
+
+// LOGOUT
+
+app.post("/logout", (req, res) => {
+  res.clearCookie("username", req.body.username);
+  res.redirect("/urls");
 })
 
 // INDEX PAGE
