@@ -14,6 +14,27 @@
       </header>
   <main style="margin: 1em;">
     <h3>My URLs</h3>
+
+    <% if (locals.user === undefined) { %> 
+
+      <center>
+        <h3>Sign in to access your URLS</h3>
+        <form class="form-inline" action="/login" method="POST">
+       
+          <div class="form-group mb-2 mx-auto">
+          <label for="email">Email: </label> 
+          <input class="form-control" type="email" name="email" style="width: 200px; margin: 1em">
+        <br>
+        <label for="password">Password: </label> 
+        <input class="form-control" type="password" name="password" style="width: 200px; margin: 1em">
+            <button type="submit" class="btn btn-primary">Login</button> 
+            </div>
+          </form>
+        </center>
+
+      <% } else { %>
+
+
     <table class="table">
       <thead>
         <tr>
@@ -27,7 +48,7 @@
         <% for(let url in urls) { %>
           <tr>
             <td><%= url %></td>
-            <td><%= urls[url] %></td>
+            <td><%= urls[url].longURL %></td>
             <td><a href="/urls/<%= url %>"><button type="submit" class="btn btn-primary">Edit</button></a></td> 
 
             <td><a href="/urls"><form method="POST" action="/urls/<%= url %>/delete"><button type="submit" class="btn btn-danger">Delete</button></form></a></td> 
@@ -36,8 +57,10 @@
           </tr>
         <% } %>
       </tbody>
+    
     </table>
     <a href='urls/new'>Shorten another URL</a>
+    <% } %>
   </main>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

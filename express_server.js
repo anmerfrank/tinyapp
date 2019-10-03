@@ -19,7 +19,7 @@ let users = {
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "purple-monkey-dinosaur"
+    password: "asdf"
   },
 }
 
@@ -38,9 +38,15 @@ const generateRandomString = function() {
 
 // RESPONSE CODE
 
+
+
+///// *** URL DATABASE: ***** //////
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xk": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.lighthouselabs.ca", userID: "userRandomID" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "userRandomID" },
+  d342sd: { longURL: "https://www.lighthouselabs.ca", userID: "asdf" },
+  i8gfGr: { longURL: "https://www.google.ca", userID: "asdf" }
 };
 
 app.get("/register", (req, res) => {
@@ -51,8 +57,25 @@ app.get("/login", (req, res) => {
   res.render("login");
 })
 
+
+// GET USER ID
+
+const getUser = (req, res) => {
+  const cookie = req.cookies["user_id"];
+  const user = users[cookie];
+  return user;
+ } 
+
+
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const user = getUser(req, res) 
+  if (user) {
+    let templateVars = { user: user };
+    res.render("urls_new");
+  }
+  else {
+    res.redirect("/login");
+  };
 });
 
 app.get("/", (req, res) => {
@@ -105,13 +128,6 @@ const getUserByEmail = function(email) {
   return false;
 }
 
-// GET USER ID
-
-// const getUser = (req, res) => {
-//  const cookie = req.cookies[“user_id”];
-//  const user = users[cookie];
-//  return user;
-// }
 
 // REGISTRATION AND USER CREATION
 
@@ -160,7 +176,7 @@ app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email);
   const email = user.email;
   const password = user.password;
-// Check that password & email match the account.
+// Will need to check that password & email match the account.
   if (user){ 
      res.cookie("user_id", user.id);
   } else {
@@ -179,14 +195,36 @@ app.post("/logout", (req, res) => {
   res.redirect("/urls");
 });
 
+
+
+
+
+/// FUNCTION FOR FILTERING URLS BY USER
+
+const urlsForUser = function(id) {
+  let urls= { };
+    for (const key in urlDatabase) {
+      if (id === urlDatabase[key].userID) {
+        urls[key] = urlDatabase[key];
+    }
+  } return urls;
+}
+
+
 // INDEX PAGE
+
+
 
 app.get("/urls", (req, res) => {
   const userId = req.cookies["user_id"];
   const user = users[userId]; 
-  let templateVars = { urls: urlDatabase, user: user};
+  let urls = urlsForUser(userId);
+
+  let templateVars = { urls: urls, user: user};
   res.render("urls_index", templateVars);
 });
+
+
 
 // SHOW URLS
 
@@ -208,7 +246,10 @@ app.post("/urls", (req, res) => {
 // REDIRECT TO LONG URL PAGE
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL];
+  let longURL = urlDatabase[req.params.shortURL].longURL; // THIS IS BROKEN RE: the new database format - how to get in?
+  let userID = urlDatabase[shortURL].userID;
+  console.log("longURL ", longURL);
+  console.log("User ID: ", userID)
   res.redirect(longURL);
 
 });
