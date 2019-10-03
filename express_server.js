@@ -118,10 +118,10 @@ const lookUpEmail = function(email) {
 }
  // GET USER BY EMAIL
 
-const getUserByEmail = function(email) {
+const getUserByEmail = function(email, password) {
   console.log("Users:",  users);
     for (const user in users) {
-      if (users.hasOwnProperty(user) && users[user].email === email) {
+      if (users.hasOwnProperty(user) && users[user].email === email && users[user].password === password) {
         return users[user];
       }
   }
@@ -173,7 +173,7 @@ res.redirect("/register")
 
 app.post("/login", (req, res) => {
   
-  const user = getUserByEmail(req.body.email);
+  const user = getUserByEmail(req.body.email, req.body.password);
   const email = user.email;
   const password = user.password;
 // Will need to check that password & email match the account.
@@ -204,6 +204,7 @@ app.post("/logout", (req, res) => {
 const urlsForUser = function(id) {
   let urls= { };
     for (const key in urlDatabase) {
+      console.log(urlDatabase[key]);
       if (id === urlDatabase[key].userID) {
         urls[key] = urlDatabase[key];
     }
@@ -239,8 +240,15 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let shortenedURL = generateRandomString();
-  res.redirect(`/urls/${shortenedURL}`);
-  urlDatabase[shortenedURL] = req.body.longURL;
+  for (let uID in users) {
+    let value = users[uID];
+
+    urlDatabase[shortenedURL] = {
+      longURL : req.body.longURL,
+      userID : value.id
+    };
+  }
+    res.redirect(`/urls/${shortenedURL}`);
 });
 
 // REDIRECT TO LONG URL PAGE
