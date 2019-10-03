@@ -7,6 +7,9 @@ const PORT = 8080;
 var cookieParser = require('cookie-parser')
 app.use(cookieParser()) 
 
+const bcrypt = require('bcrypt');
+
+
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
@@ -119,17 +122,17 @@ const lookUpEmail = function(email) {
  // GET USER BY EMAIL
 
 const getUserByEmail = function(email, password) {
-  console.log("Users:",  users);
+  // console.log("Users:",  users);
     for (const user in users) {
-      if (users.hasOwnProperty(user) && users[user].email === email && users[user].password === password) {
+      if (users.hasOwnProperty(user) && users[user].email === email) {
         return users[user];
       }
   }
-  return false;
+  return null;
 }
 
 
-// REGISTRATION AND USER CREATION
+///// REGISTRATION AND USER CREATION /////
 
 app.post("/register", (req, res) => {
 
@@ -146,17 +149,20 @@ app.post("/register", (req, res) => {
 
   // adds a user to the USERS object
 
+  const password = req.body.password; 
+  const hashedPassword = bcrypt.hashSync(password, 10);
   let userId = generateRandomString();
   
     const newUser = {
     id: userId, 
     email: req.body.email, 
-    password: req.body.password,
+    password: hashedPassword,
     }  
     
     users[userId] = newUser;
 
   res.cookie("user_id", users[userId].id);
+  console.log(newUser);
   res.redirect("/urls");
 
   }
@@ -175,9 +181,13 @@ app.post("/login", (req, res) => {
   
   const user = getUserByEmail(req.body.email, req.body.password);
   const email = user.email;
+ 
+
+  // CHECKING PASSWORD
+  
   const password = user.password;
-// Will need to check that password & email match the account.
-  if (user){ 
+  console.log(user.password);
+  if (bcrypt.compareSync(req.body.password, password)){ 
      res.cookie("user_id", user.id);
   } else {
     res.send(403, "403 Error: Username/password combination not found.");
