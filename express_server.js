@@ -4,25 +4,32 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
-var cookieParser = require('cookie-parser')
-app.use(cookieParser()) 
+// var cookieParser = require('cookie-parser')
+// app.use(cookieParser()) 
 
 const bcrypt = require('bcrypt');
 
-
+const cookieSession = require('cookie-session')
+app.use(cookieSession({
+  name: 'session',
+  keys: ["gorilla"],}));
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
+
+
 
 app.set("view engine", "ejs");
 
 // USERS OBJECT
 
+// const users[user].password = 
+
 let users = { 
   "userRandomID": {
     id: "userRandomID", 
     email: "user@example.com", 
-    password: "asdf"
+    password: "asdf" // NEED TO HASH THIS
   },
 }
 
@@ -64,7 +71,7 @@ app.get("/login", (req, res) => {
 // GET USER ID
 
 const getUser = (req, res) => {
-  const cookie = req.cookies["user_id"];
+  const cookie = req.session["user_id"];
   const user = users[cookie];
   return user;
  } 
@@ -161,7 +168,7 @@ app.post("/register", (req, res) => {
     
     users[userId] = newUser;
 
-  res.cookie("user_id", users[userId].id);
+    req.session.user_id, users[userId].id; // is this right??!
   console.log(newUser);
   res.redirect("/urls");
 
@@ -188,7 +195,7 @@ app.post("/login", (req, res) => {
   const password = user.password;
   console.log(user.password);
   if (bcrypt.compareSync(req.body.password, password)){ 
-     res.cookie("user_id", user.id);
+    req.session.user_id = user.id;
   } else {
     res.send(403, "403 Error: Username/password combination not found.");
   }
@@ -201,7 +208,7 @@ app.post("/login", (req, res) => {
 // LOGOUT
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id", req.body.userId);
+  req.session = null;
   res.redirect("/urls");
 });
 
@@ -227,7 +234,7 @@ const urlsForUser = function(id) {
 
 
 app.get("/urls", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session["user_id"];
   const user = users[userId]; 
   let urls = urlsForUser(userId);
 
@@ -240,7 +247,7 @@ app.get("/urls", (req, res) => {
 // SHOW URLS
 
 app.get("/urls/:shortURL", (req, res) => {
-  const userId = req.cookies["user_id"];
+  const userId = req.session["user_id"];
   const user = users[userId]; 
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: user};
   res.render("urls_show", templateVars);
