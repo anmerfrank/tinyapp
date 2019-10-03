@@ -4,12 +4,9 @@ const express = require("express");
 const app = express();
 const PORT = 8080;
 
-// var cookieParser = require('cookie-parser')
-// app.use(cookieParser()) 
-
 const bcrypt = require('bcrypt');
 
-const cookieSession = require('cookie-session')
+const cookieSession = require('cookie-session');
 app.use(cookieSession({
   name: 'session',
   keys: ["gorilla"],}));
@@ -17,23 +14,23 @@ app.use(cookieSession({
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
-
-
 app.set("view engine", "ejs");
 
-// USERS OBJECT
 
-// const users[user].password = 
+// IMPORTING HELPER FUNCTIONS
 
-let users = { 
+const getUserByEmail = require("./helpers.js");
+
+
+////// DATABASE: USERS /////
+
+let users = {
   "userRandomID": {
-    id: "userRandomID", 
-    email: "user@example.com", 
+    id: "userRandomID",
+    email: "user@example.com",
     password: "asdf" // NEED TO HASH THIS
   },
-}
-
-
+};
 
 const generateRandomString = function() {
   let result = '';
@@ -46,8 +43,8 @@ const generateRandomString = function() {
 };
 
 
-// RESPONSE CODE
 
+// RESPONSE CODE
 
 
 ///// *** URL DATABASE: ***** //////
@@ -61,11 +58,11 @@ const urlDatabase = {
 
 app.get("/register", (req, res) => {
   res.render("register");
-})
+});
 
 app.get("/login", (req, res) => {
   res.render("login");
-})
+});
 
 
 // GET USER ID
@@ -74,18 +71,16 @@ const getUser = (req, res) => {
   const cookie = req.session["user_id"];
   const user = users[cookie];
   return user;
- } 
+};
 
 
 app.get("/urls/new", (req, res) => {
-  const user = getUser(req, res) 
+  const user = getUser(req, res);
   if (user) {
-    let templateVars = { user: user };
     res.render("urls_new");
-  }
-  else {
+  } else {
     res.redirect("/login");
-  };
+  }
 });
 
 app.get("/", (req, res) => {
@@ -104,39 +99,17 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello<b>World</b></body></html>\n");
 });
 
-  ////// FUNCTION TO CHECK FOR AN EMAIL IN USERS OBJECT 
+////// FUNCTION TO CHECK FOR AN EMAIL IN USERS OBJECT
 
 const checkForEmail = function(email) {
   console.log("Users:",  users);
-    for (const user in users) {
-      if (users.hasOwnProperty(user) && users[user].email === email) {
-        return true;
-      }
+  for (const user in users) {
+    if (users.hasOwnProperty(user) && users[user].email === email) {
+      return true;
+    }
   }
   return false;
-}
-
-// FUNCTION TO LOOK UP USER BY EMAIL
-
-const lookUpEmail = function(email) {
-  console.log("Users:",  users);
-    for (const user in users) {
-      if (users.hasOwnProperty(user) && users[user].email === email) {
-        return email;
-      }
-  }
-}
- // GET USER BY EMAIL
-
-const getUserByEmail = function(email, password) {
-  // console.log("Users:",  users);
-    for (const user in users) {
-      if (users.hasOwnProperty(user) && users[user].email === email) {
-        return users[user];
-      }
-  }
-  return null;
-}
+};
 
 
 ///// REGISTRATION AND USER CREATION /////
@@ -186,15 +159,18 @@ res.redirect("/register")
 
 app.post("/login", (req, res) => {
   
-  const user = getUserByEmail(req.body.email, req.body.password);
-  const email = user.email;
- 
+  const user = getUserByEmail(req.body.email, users);
+  console.log("User: ", user);
 
-  // CHECKING PASSWORD
-  
+  const email = user.email;
+   
   const password = user.password;
   console.log(user.password);
-  if (bcrypt.compareSync(req.body.password, password)){ 
+
+
+  // CHECKING PASSWORD
+
+  if (user && bcrypt.compareSync(req.body.password, password)){ 
     req.session.user_id = user.id;
   } else {
     res.send(403, "403 Error: Username/password combination not found.");
@@ -249,7 +225,7 @@ app.get("/urls", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session["user_id"];
   const user = users[userId]; 
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: user};
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: user};
   res.render("urls_show", templateVars);
 });
 
