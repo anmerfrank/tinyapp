@@ -17,22 +17,24 @@
     </div>
  
    
-    <% if (username === undefined) { %> 
-   <form class="form-inline" action="/login" method="POST">
+    <% if (locals.user === undefined) { %> 
      
       <div class="form-group mb-2 mx-auto">
-        <label for="username">Username: </label> 
-        <input class="form-control" type="text" name="username" placeholder="Sign in here..."  style="width: 200px; margin: 1em">
-        <button type="submit" class="btn btn-dark">Login</button> 
+          <a class="nav-item nav-link" href="/login">
+        <button type="submit" class="btn btn-dark">Login</button> </a>
         </div>
       </form>
+            <label for="or"> &nbsp; or &nbsp;</label> 
+            <a class="nav-item nav-link" href="/register">
+          <button type="submit" class="btn btn-warning">Register</button>   </a>
+          </div>
+        </form>
 
       <% } else { %>
-      
-
+    
           <form class="form-inline" action="/logout" method="POST">
            <div class="form-group mb-2 mx-auto">
-              <label for="loggedin">Logged in as &nbsp;<strong> <%= username %> </strong>  </label> 
+              <label for="loggedin">Logged in as &nbsp;<strong> <%= user.email %> </strong>  </label> 
                <button type="submit" class="btn btn-secondary" style="margin: 1em">Logout</button>  
             </div>
           </form>

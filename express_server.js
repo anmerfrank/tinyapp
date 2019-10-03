@@ -13,6 +13,17 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
+// USERS OBJECT
+
+let users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+}
+
+
 
 const generateRandomString = function() {
   let result = '';
@@ -32,6 +43,14 @@ const urlDatabase = {
   "9sm5xk": "http://www.google.com"
 };
 
+app.get("/register", (req, res) => {
+  res.render("register");
+})
+
+app.get("/login", (req, res) => {
+  res.render("login");
+})
+
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
@@ -41,7 +60,7 @@ app.get("/", (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}!`);
+  console.log(`Tiny App listening on port ${PORT}!`);
 });
 
 app.get("/urls.json", (req, res) => {
@@ -52,30 +71,129 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello<b>World</b></body></html>\n");
 });
 
-// SIGN-IN
-app.post("/login", (req, res) => {
-  res.cookie("username",req.body.username);
+  ////// FUNCTION TO CHECK FOR AN EMAIL IN USERS OBJECT 
+
+const checkForEmail = function(email) {
+  console.log("Users:",  users);
+    for (const user in users) {
+      if (users.hasOwnProperty(user) && users[user].email === email) {
+        return true;
+      }
+  }
+  return false;
+}
+
+// FUNCTION TO LOOK UP USER BY EMAIL
+
+const lookUpEmail = function(email) {
+  console.log("Users:",  users);
+    for (const user in users) {
+      if (users.hasOwnProperty(user) && users[user].email === email) {
+        return email;
+      }
+  }
+}
+ // GET USER BY EMAIL
+
+const getUserByEmail = function(email) {
+  console.log("Users:",  users);
+    for (const user in users) {
+      if (users.hasOwnProperty(user) && users[user].email === email) {
+        return users[user];
+      }
+  }
+  return false;
+}
+
+// GET USER ID
+
+// const getUser = (req, res) => {
+//  const cookie = req.cookies[“user_id”];
+//  const user = users[cookie];
+//  return user;
+// }
+
+// REGISTRATION AND USER CREATION
+
+app.post("/register", (req, res) => {
+
+  // ERROR CHECKING
+
+
+  if (checkForEmail(req.body.email) === true) {
+    res.send(400,"400 Error: An account with this email address already exists.");
+  }
+  if (req.body.email === "" || req.body.password === "") {
+    res.send(400, "400 Error: Please make sure all fields are filled out correctly.");
+
+  } else {
+
+  // adds a user to the USERS object
+
+  let userId = generateRandomString();
+  
+    const newUser = {
+    id: userId, 
+    email: req.body.email, 
+    password: req.body.password,
+    }  
+    
+    users[userId] = newUser;
+
+  res.cookie("user_id", users[userId].id);
   res.redirect("/urls");
+
+  }
 })
+
+
+// REDIRECT TO SIGNUP PAGE
+
+app.post("/signup", (req, res) => {
+res.redirect("/register")
+});
+
+// ON CLICKING THE LOGIN BUTTON ON THE LOGIN PAGE
+
+app.post("/login", (req, res) => {
+  
+  const user = getUserByEmail(req.body.email);
+  const email = user.email;
+  const password = user.password;
+// Check that password & email match the account.
+  if (user){ 
+     res.cookie("user_id", user.id);
+  } else {
+    res.send(403, "403 Error: Username/password combination not found.");
+  }
+  let templateVars = { urls: urlDatabase, user: user, email: email, password: password};
+
+  res.redirect("/urls"); 
+});
+
 
 // LOGOUT
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username", req.body.username);
+  res.clearCookie("user_id", req.body.userId);
   res.redirect("/urls");
-})
+});
 
 // INDEX PAGE
 
 app.get("/urls", (req, res) => {
-  let templateVars = { urls: urlDatabase, username: req.cookies.username};
+  const userId = req.cookies["user_id"];
+  const user = users[userId]; 
+  let templateVars = { urls: urlDatabase, user: user};
   res.render("urls_index", templateVars);
 });
 
 // SHOW URLS
 
 app.get("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], username: req.cookies.username};
+  const userId = req.cookies["user_id"];
+  const user = users[userId]; 
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user: user};
   res.render("urls_show", templateVars);
 });
 
