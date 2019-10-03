@@ -254,12 +254,8 @@ app.post("/urls", (req, res) => {
 // REDIRECT TO LONG URL PAGE
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].longURL; // THIS IS BROKEN RE: the new database format - how to get in?
-  let userID = urlDatabase[shortURL].userID;
-  console.log("longURL ", longURL);
-  console.log("User ID: ", userID)
+  let longURL = urlDatabase[req.params.shortURL].longURL; 
   res.redirect(longURL);
-
 });
 
 // DELETE A SHORT URL
