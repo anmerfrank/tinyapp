@@ -28,7 +28,7 @@ let users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "asdf" // NEED TO HASH THIS
+    password: "asdf" 
   },
 };
 
@@ -43,11 +43,7 @@ const generateRandomString = function() {
 };
 
 
-
-// RESPONSE CODE
-
-
-///// *** URL DATABASE: ***** //////
+///// *** URL DATABASE: *** /////
 
 const urlDatabase = {
   b6UTxQ: { longURL: "https://www.lighthouselabs.ca", userID: "userRandomID" },
@@ -55,6 +51,10 @@ const urlDatabase = {
   d342sd: { longURL: "https://www.lighthouselabs.ca", userID: "asdf" },
   i8gfGr: { longURL: "https://www.google.ca", userID: "asdf" }
 };
+
+
+// RESPONSE CODE
+
 
 app.get("/register", (req, res) => {
   res.render("register");
@@ -73,14 +73,30 @@ const getUser = (req, res) => {
   return user;
 };
 
+// GET NEW URLS PAGE
 
 app.get("/urls/new", (req, res) => {
-  const user = getUser(req, res);
+  const userId = req.session["user_id"];
+  const user = users[userId];
   if (user) {
-    res.render("urls_new");
+    let templateVars = { user: user };
+    res.render("urls_new", templateVars);
   } else {
     res.redirect("/login");
   }
+});
+
+// RENDERING URLS ID PAGE
+
+app.get("/urls/:shortURL/", (req, res) => {
+  const userId = req.session["user_id"];
+  const user = users[userId];
+  // if (user === shortURL.userID) {
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: user, orgUser: urlDatabase[req.params.shortURL].userID};
+  res.render("urls_show", templateVars);
+  // } else {
+  //   res.send("You don't have access to this URL");
+  // }
 });
 
 app.get("/", (req, res) => {
@@ -116,8 +132,7 @@ const checkForEmail = function(email) {
 
 app.post("/register", (req, res) => {
 
-  // ERROR CHECKING
-
+  // error handling
 
   if (checkForEmail(req.body.email) === true) {
     res.send(400,"400 Error: An account with this email address already exists.");
@@ -127,32 +142,31 @@ app.post("/register", (req, res) => {
 
   } else {
 
-  // adds a user to the USERS object
+    // otherwise, adds a user to the USERS object
 
-  const password = req.body.password; 
-  const hashedPassword = bcrypt.hashSync(password, 10);
-  let userId = generateRandomString();
+    const password = req.body.password;
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    let userId = generateRandomString();
   
     const newUser = {
-    id: userId, 
-    email: req.body.email, 
-    password: hashedPassword,
-    }  
+      id: userId,
+      email: req.body.email,
+      password: hashedPassword,
+    };
     
     users[userId] = newUser;
 
-    req.session.user_id, users[userId].id; // is this right??!
-  console.log(newUser);
-  res.redirect("/urls");
-
+    req.session.user_id, users[userId].id; 
+    console.log(newUser);
+    res.redirect("/urls");
   }
-})
+});
 
 
 // REDIRECT TO SIGNUP PAGE
 
 app.post("/signup", (req, res) => {
-res.redirect("/register")
+  res.redirect("/register");
 });
 
 // ON CLICKING THE LOGIN BUTTON ON THE LOGIN PAGE
@@ -160,24 +174,21 @@ res.redirect("/register")
 app.post("/login", (req, res) => {
   
   const user = getUserByEmail(req.body.email, users);
-  console.log("User: ", user);
 
-  const email = user.email;
-   
-  const password = user.password;
-  console.log(user.password);
-
-
-  // CHECKING PASSWORD
-
-  if (user && bcrypt.compareSync(req.body.password, password)){ 
-    req.session.user_id = user.id;
+  if (!user) {
+    res.send(400, "400 Error: Username/password combination not found.");
   } else {
-    res.send(403, "403 Error: Username/password combination not found.");
-  }
-  let templateVars = { urls: urlDatabase, user: user, email: email, password: password};
 
-  res.redirect("/urls"); 
+    const email = user.email;
+    const password = user.password;
+
+    if (user && bcrypt.compareSync(req.body.password, password)) {
+      req.session.user_id = user.id;
+    } else res.send(400, "400 Error: Username/password combination not found.");
+    let templateVars = { urls: urlDatabase, user: user, email: email, password: password};
+   
+    res.redirect("/urls");
+  }
 });
 
 
@@ -190,44 +201,51 @@ app.post("/logout", (req, res) => {
 
 
 
-
-
-/// FUNCTION FOR FILTERING URLS BY USER
+// FUNCTION: FILTER URLS BY USER
 
 const urlsForUser = function(id) {
-  let urls= { };
-    for (const key in urlDatabase) {
-      console.log(urlDatabase[key]);
-      if (id === urlDatabase[key].userID) {
-        urls[key] = urlDatabase[key];
+  let urls = { };
+  for (const key in urlDatabase) {
+    console.log(urlDatabase[key]);
+    if (id === urlDatabase[key].userID) {
+      urls[key] = urlDatabase[key];
     }
   } return urls;
-}
+};
 
 
 // INDEX PAGE
 
 
-
 app.get("/urls", (req, res) => {
   const userId = req.session["user_id"];
-  const user = users[userId]; 
+  const user = users[userId];
   let urls = urlsForUser(userId);
-
   let templateVars = { urls: urls, user: user};
-  res.render("urls_index", templateVars);
+  res.render("urls_index", templateVars,);
 });
-
 
 
 // SHOW URLS
 
 app.get("/urls/:shortURL", (req, res) => {
   const userId = req.session["user_id"];
-  const user = users[userId]; 
+  const user = users[userId];
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: user};
   res.render("urls_show", templateVars);
 });
+
+
+// REDIRECT TO CORRECT PAGE
+
+app.get("/", (req, res) => {
+  const user = getUser(req, res);
+  if (user) {
+    res.redirect("/urls");
+  } else
+    res.redirect("/login");
+});
+
 
 // GET SHORTENED URL
 
@@ -241,13 +259,13 @@ app.post("/urls", (req, res) => {
       userID : value.id
     };
   }
-    res.redirect(`/urls/${shortenedURL}`);
+  res.redirect(`/urls/${shortenedURL}`);
 });
 
 // REDIRECT TO LONG URL PAGE
 
 app.get("/u/:shortURL", (req, res) => {
-  let longURL = urlDatabase[req.params.shortURL].longURL; 
+  let longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -256,12 +274,11 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
-})
+});
 
 // EDIT A SHORT URL
 
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
   res.redirect("/urls");
-})
-
+});
