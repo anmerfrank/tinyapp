@@ -91,12 +91,13 @@ app.get("/urls/new", (req, res) => {
 app.get("/urls/:shortURL/", (req, res) => {
   const userId = req.session["user_id"];
   const user = users[userId];
-  // if (user === shortURL.userID) {
+  const urlName = urlDatabase[req.params.shortURL];
+  if (user.id === urlName.userID) {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL].longURL, user: user, orgUser: urlDatabase[req.params.shortURL].userID};
   res.render("urls_show", templateVars);
-  // } else {
-  //   res.send("You don't have access to this URL");
-  // }
+  } else {
+    res.send("You don't have access to this URL");
+  }
 });
 
 app.get("/", (req, res) => {
@@ -118,7 +119,6 @@ app.get("/hello", (req, res) => {
 ////// FUNCTION TO CHECK FOR AN EMAIL IN USERS OBJECT
 
 const checkForEmail = function(email) {
-  console.log("Users:",  users);
   for (const user in users) {
     if (users.hasOwnProperty(user) && users[user].email === email) {
       return true;
@@ -142,7 +142,7 @@ app.post("/register", (req, res) => {
 
   } else {
 
-    // otherwise, adds a user to the USERS object
+    // if all OK, adds a user to the USERS object
 
     const password = req.body.password;
     const hashedPassword = bcrypt.hashSync(password, 10);
@@ -157,7 +157,6 @@ app.post("/register", (req, res) => {
     users[userId] = newUser;
 
     req.session.user_id, users[userId].id; 
-    console.log(newUser);
     res.redirect("/urls");
   }
 });
@@ -206,7 +205,6 @@ app.post("/logout", (req, res) => {
 const urlsForUser = function(id) {
   let urls = { };
   for (const key in urlDatabase) {
-    console.log(urlDatabase[key]);
     if (id === urlDatabase[key].userID) {
       urls[key] = urlDatabase[key];
     }
